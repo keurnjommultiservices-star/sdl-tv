@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SDL la.TV – Service de Développement Local</title>
+<meta name="description" content="SDL la.TV au service de sa localité : reportages et événements de la localité en vidéo.">
+<style>
+:root{--bg:#c6e8fb;--bg2:#e6f5fd;--card:#ffffff;--line:#a9d3ea;--txt:#0e2a3f;--mut:#4a6b82;--green:#0b72c9;--gold:#c98a00;--red:#e5383b;--r:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--txt);line-height:1.5}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer;border:0;color:inherit;background:none}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.hbar{display:flex;align-items:center;gap:14px;height:64px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.5px}
+.logo .mark{width:42px;height:42px;display:block;flex:none}.logo .mark svg{display:block}
+.logo b{font-size:20px}.logo b i{font-style:normal;color:var(--gold)}
+.logo small{display:block;font-weight:500;font-size:10.5px;color:var(--mut);letter-spacing:0;margin-top:-3px}
+.search{flex:1;max-width:420px;margin-left:auto}
+.search input{width:100%;padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:var(--bg2);color:var(--txt);font:inherit;outline:none}
+.search input:focus{border-color:var(--green)}
+.live-pill{display:none;align-items:center;gap:6px;background:var(--red);color:#fff;font-weight:700;font-size:13px;padding:7px 12px;border-radius:999px}
+.live-pill.on{display:flex}
+.live-pill:before{content:"";width:8px;height:8px;border-radius:50%;background:#fff;animation:pl 1.2s infinite}
+@keyframes pl{50%{opacity:.25}}
+.hero{padding:26px 0 8px}
+.banner{max-width:640px;margin:0 auto 22px}.banner svg{display:block;width:100%;height:auto;filter:drop-shadow(0 4px 10px rgba(10,76,138,.25))}
+.tag{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.hero h1{font-size:clamp(22px,4.5vw,38px);line-height:1.15;margin-bottom:6px}
+.hero p.sl{color:var(--mut);margin-bottom:18px}
+.player{position:relative;aspect-ratio:16/9;background:#000;border-radius:var(--r);overflow:hidden;border:1px solid var(--line)}
+.player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.hmeta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0 4px;color:var(--mut);font-size:14px}
+.hmeta h2{width:100%;color:var(--txt);font-size:20px}
+.chip{padding:3px 10px;border-radius:999px;background:var(--bg2);border:1px solid var(--line);font-size:12.5px}
+.sub{display:inline-block;margin-top:14px;padding:10px 18px;border-radius:10px;background:var(--red);color:#fff;font-weight:700}
+.filters{display:flex;gap:8px;overflow-x:auto;padding:18px 0 6px;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.filters button{white-space:nowrap;padding:8px 16px;border-radius:999px;background:var(--bg2);border:1px solid var(--line);font-size:14px;color:var(--mut)}
+.filters button.on{background:var(--green);border-color:var(--green);color:#fff;font-weight:600}
+h3.sec{font-size:19px;margin:22px 0 14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:.18s;text-align:left;display:block;width:100%}
+.card:hover{transform:translateY(-3px);border-color:var(--green)}
+.thumb{position:relative;aspect-ratio:16/9;background:linear-gradient(135deg,#1783d1,#0a4c8a);overflow:hidden}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb:after{content:"▶";position:absolute;inset:0;display:grid;place-items:center;font-size:30px;color:#fff;background:rgba(0,0,0,.25);opacity:0;transition:.18s}
+.card:hover .thumb:after{opacity:1}
+.cb{padding:12px 14px 14px}
+.cb h4{font-size:15.5px;line-height:1.3;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cb span{font-size:12.5px;color:var(--mut)}
+.empty{padding:40px 20px;text-align:center;color:var(--mut);border:1px dashed var(--line);border-radius:var(--r)}
+.about{margin:48px 0 0;padding:32px;background:linear-gradient(135deg,#0a4c8a,#1783d1);border-radius:var(--r);color:#fff}
+.about h3{font-size:22px;margin-bottom:8px}
+.about p{color:#e3f3ff;max-width:720px}
+.stats{display:flex;gap:26px;flex-wrap:wrap;margin-top:18px}
+.stats b{display:block;font-size:26px;color:#ffd35c}
+.stats span{font-size:13px;color:#d3ebff}
+footer{margin-top:48px;border-top:1px solid var(--line);padding:26px 0 40px;color:var(--mut);font-size:14px}
+.fl{display:flex;gap:16px;flex-wrap:wrap;margin:10px 0}
+.fl a{color:var(--txt);border-bottom:1px solid var(--green)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:50;display:none;align-items:center;justify-content:center;padding:16px}
+.modal.on{display:flex}
+.mbox{width:100%;max-width:900px}
+.mbox h3{margin:12px 0 4px;font-size:18px;color:#fff}
+.mbox p{color:#cfe6f5;font-size:14px}
+.mx{position:absolute;top:12px;right:16px;font-size:34px;color:#fff;line-height:1}
+@media(max-width:640px){.search{max-width:none}.logo small{display:none}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap hbar">
+    <a href="#" class="logo" onclick="window.scrollTo({top:0,behavior:'smooth'});return false">
+      <span class="mark"><svg viewBox="0 0 100 100" width="42" height="42" aria-label="SDL TV"><circle cx="50" cy="50" r="50" fill="#000"/><text x="9" y="56" font-size="26" font-weight="900" fill="#fff" font-family="Arial Black,Arial,sans-serif">SDL</text><rect x="58" y="52" width="30" height="24" rx="3" fill="#1b3f8f"/><text x="61" y="71" font-size="17" font-weight="900" fill="#e5232d" font-family="Arial Black,Arial,sans-serif">TV</text></svg></span>
+      <span><b>la.<i>TV</i></b><small>Service de Développement Local</small></span>
+    </a>
+    <a id="livePill" class="live-pill" href="#" onclick="openLive();return false">EN DIRECT</a>
+    <div class="search"><input id="q" type="search" placeholder="Rechercher une vidéo…" oninput="render()"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="banner"><svg viewBox="0 0 1000 260" role="img" aria-label="Infos Xibarr"><ellipse cx="500" cy="130" rx="492" ry="120" fill="none" stroke="#fff" stroke-width="5"/><ellipse cx="500" cy="130" rx="470" ry="108" fill="#000"/><line x1="75" y1="130" x2="925" y2="130" stroke="#1ea0e8" stroke-width="9"/><text x="500" y="98" text-anchor="middle" font-size="74" font-weight="900" letter-spacing="20" fill="#fff" font-family="Arial Black,Impact,Arial,sans-serif">INFOS</text><line x1="400" y1="108" x2="600" y2="108" stroke="#cfd8dc" stroke-width="2"/><line x1="360" y1="152" x2="640" y2="152" stroke="#cfd8dc" stroke-width="2"/><text x="500" y="212" text-anchor="middle" font-size="62" font-weight="900" letter-spacing="14" fill="#fff" font-family="Arial Black,Impact,Arial,sans-serif">XIBARR</text><line x1="340" y1="224" x2="660" y2="224" stroke="#cfd8dc" stroke-width="2"/></svg></div>
+    <span class="tag">SDL · Service de Développement Local</span>
+    <h1>la.TV au service de sa localité</h1>
+    <p class="sl">Reportages et événements de la localité, en vidéo.</p>
+    <div id="heroBlock"><div class="empty">Chargement des vidéos…</div></div>
+    <a class="sub" id="subBtn" target="_blank" rel="noopener" href="#">S'abonner à la chaîne YouTube</a>
+  </section>
+
+  <div class="filters" id="filters"></div>
+  <h3 class="sec" id="secTitle">Toutes les vidéos</h3>
+  <div class="grid" id="grid"></div>
+
+  <section class="about" id="apropos">
+    <h3>À propos de SDL</h3>
+    <p>Le Service de Développement Local (SDL) donne la parole aux acteurs de la localité : élus, associations, jeunes, femmes et entrepreneurs. Avec la.TV, chaque habitant peut suivre les projets, les événements et les initiatives qui font avancer son territoire.</p>
+    <div class="stats"><div><b id="stV">0</b><span>vidéos</span></div><div><b id="stC">0</b><span>rubriques</span></div></div>
+  </section>
+
+  <footer>
+    <strong>SDL la.TV</strong> — la.TV au service de sa localité
+    <div class="fl" id="links"></div>
+  </footer>
+</main>
+
+<div class="modal" id="modal" onclick="if(event.target===this)closeModal()">
+  <button class="mx" onclick="closeModal()" aria-label="Fermer">×</button>
+  <div class="mbox">
+    <div class="player" id="mPlayer"></div>
+    <h3 id="mTitle"></h3><p id="mMeta"></p>
+  </div>
+</div>
+
+<script>
+/* ===== RÉGLAGES (modifiables ici) ===== */
+const CHANNEL_URL="https://www.youtube.com/@sdltv4290";
+const CHANNEL_ID="UCNjxTyTmhlY3fKT2Uuu2Ztw";
+const LIVE_URL="";   // lien d'un direct YouTube à afficher en haut (laisser vide si aucun)
+const FACEBOOK="";   // lien de la page Facebook
+const WHATSAPP="";   // numéro WhatsApp, ex. 221770000000
+
+/* Classement par mots-clés du titre : le premier groupe qui correspond l'emporte. */
+const RULES=[
+ ["Reportages",["reportage","report "]],
+ ["Événements",["evenement","ceremonie","inauguration","journee","festival","gamou","magal","lancement","atelier","forum","conference","remise","ouverture","fete","ndogou","tabaski","korite","cloture","ceremonie","assemblee","rencontre","visite"]],
+ ["Entretiens",["entretien","interview","invite","face a","debat","temoignage"]],
+ ["Développement local",["developpement","projet","commune","mairie","conseil municipal","budget","collectivite","maire","amenagement","investissement","pastef"]],
+ ["Culture & jeunesse",["culture","jeunesse","sport","tournoi","theatre","danse","concert","musique","foot","basket","jeunes","navetane"]],
+ ["Actualités",["actualite","infos","info ","xibarr","journal","flash","direct","breaking"]]
+];
+const OTHER="Autres vidéos";
+const ORDER=[...RULES.map(r=>r[0]),OTHER];
+/* ====================================== */
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const norm=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+function classify(title){
+  const t=" "+norm(title)+" ";
+  for(const [cat,words] of RULES) if(words.some(w=>t.includes(w))) return cat;
+  return OTHER;
+}
+function ytId(u){
+  if(!u)return null;u=String(u).trim();
+  if(/^[\w-]{11}$/.test(u))return u;
+  const m=u.match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([\w-]{11})/);
+  return m?m[1]:null;
+}
+const embed=(id,auto)=>`<iframe src="https://www.youtube-nocookie.com/embed/${id}?rel=0${auto?"&autoplay=1":""}" allow="accelerometer;autoplay;encrypted-media;picture-in-picture;fullscreen" allowfullscreen loading="lazy"></iframe>`;
+const fmtDate=d=>{try{return d?new Date(d).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"}):""}catch(e){return d||""}};
+
+let videos=[],filter="Tout",loaded=false;
+
+async function load(){
+  let list=null;
+  try{
+    const r=await fetch("/api/videos");
+    if(r.ok){const j=await r.json();list=j.videos}
+  }catch(e){}
+  if(!list||!list.length){ // secours : service public de lecture du flux
+    try{
+      const r=await fetch("https://api.rss2json.com/v1/api.json?rss_url="+encodeURIComponent("https://www.youtube.com/feeds/videos.xml?channel_id="+CHANNEL_ID));
+      const j=await r.json();
+      if(j.status==="ok")list=(j.items||[]).map(i=>({id:ytId(i.link||""),title:i.title,date:String(i.pubDate||"").slice(0,10)})).filter(v=>v.id);
+    }catch(e){}
+  }
+  videos=(list||[]).map(v=>({key:v.id,id:v.id,title:v.title,date:v.date,cat:classify(v.title)}))
+    .sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  loaded=true;render();
+}
+
+function render(){
+  const q=$("q").value.toLowerCase().trim();
+  const live=ytId(LIVE_URL);
+  const first=live?{id:live,title:"En direct sur SDL la.TV",cat:"Direct",date:""}:videos[0];
+  const hb=$("heroBlock");
+  if(first&&!q&&filter==="Tout"){
+    hb.innerHTML=`<div class="player">${embed(first.id,false)}</div><div class="hmeta"><h2>${esc(first.title)}</h2>${first.cat?`<span class="chip">${esc(first.cat)}</span>`:""}<span>${fmtDate(first.date)}</span></div>`;
+  }else if(!first){
+    hb.innerHTML=`<div class="empty">${loaded?"Aucune vidéo pour le moment. Revenez bientôt.":"Chargement des vidéos…"}</div>`;
+  }else hb.innerHTML="";
+  $("livePill").classList.toggle("on",!!live);
+  $("subBtn").href=CHANNEL_URL+"?sub_confirmation=1";
+  const used=ORDER.filter(c=>videos.some(v=>v.cat===c));
+  $("filters").innerHTML=["Tout",...used].map(c=>`<button class="${c===filter?"on":""}" onclick="setFilter('${c.replace(/'/g,"\\'")}')">${esc(c)}</button>`).join("");
+  const list=videos.filter(v=>(filter==="Tout"||v.cat===filter)&&(!q||norm(v.title).includes(norm(q))));
+  $("secTitle").textContent=q?`Résultats pour « ${q} »`:(filter==="Tout"?"Toutes les vidéos":filter);
+  $("grid").innerHTML=list.length?list.map(v=>`
+    <button class="card" onclick="openVideo('${esc(v.key)}')">
+      <div class="thumb"><img loading="lazy" src="https://img.youtube.com/vi/${esc(v.id)}/hqdefault.jpg" alt=""></div>
+      <div class="cb"><h4>${esc(v.title)}</h4><span>${esc(v.cat)} · ${fmtDate(v.date)}</span></div>
+    </button>`).join(""):`<div class="empty" style="grid-column:1/-1">${loaded?"Aucune vidéo à afficher.":"Chargement…"}</div>`;
+  $("stV").textContent=videos.length;$("stC").textContent=used.length;
+  const L=[`<a href="${esc(CHANNEL_URL)}" target="_blank" rel="noopener">Chaîne YouTube SDLTV</a>`];
+  if(FACEBOOK)L.push(`<a href="${esc(FACEBOOK)}" target="_blank" rel="noopener">Facebook</a>`);
+  if(WHATSAPP)L.push(`<a href="https://wa.me/${esc(String(WHATSAPP).replace(/\D/g,""))}" target="_blank" rel="noopener">WhatsApp</a>`);
+  $("links").innerHTML=L.join("");
+}
+function setFilter(c){filter=c;render()}
+function openVideo(key){
+  const v=videos.find(x=>x.key===key);if(!v)return;
+  $("mPlayer").innerHTML=embed(v.id,true);
+  $("mTitle").textContent=v.title;
+  $("mMeta").textContent=[v.cat,fmtDate(v.date)].filter(Boolean).join(" · ");
+  $("modal").classList.add("on");
+}
+function openLive(){const id=ytId(LIVE_URL);if(!id)return;
+  $("mPlayer").innerHTML=embed(id,true);$("mTitle").textContent="En direct sur SDL la.TV";$("mMeta").textContent="";
+  $("modal").classList.add("on")}
+function closeModal(){$("modal").classList.remove("on");$("mPlayer").innerHTML=""}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
+render();load();
+</script>
+</body>
+</html>
